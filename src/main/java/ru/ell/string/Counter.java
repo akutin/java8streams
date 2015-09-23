@@ -20,10 +20,7 @@ public class Counter {
      * Counts number of character occurrences in a string
      */
     public static long countOf(String s, Character c) {
-        return s.chars()
-                .mapToObj( x -> (char) x)
-                .filter(x -> c.equals(x))
-                .count();
+        return chars( s.chars()).filter(x -> c.equals(x)).count();
     }
 
     /**
@@ -32,7 +29,7 @@ public class Counter {
      * Matches are case-insensitive
      */
     public static Map<Character, Long> countOf(String s, Set<Character> c) {
-        return countOf(s.chars().mapToObj(ch -> (char) ch), c);
+        return countOf(chars(s.chars()), c);
     }
 
     public static Map<Character, Long> countOf(Stream<Character> s, Set<Character> c) {
@@ -47,9 +44,13 @@ public class Counter {
         return counts;
     }
 
+    public static Stream<Character> chars(IntStream in) {
+        return in.mapToObj( x -> (char) x);
+    }
+
     public static IntStream steam(Reader reader) {
         final PrimitiveIterator.OfInt it=new PrimitiveIterator.OfInt() {
-            private int last=-2;
+            private int last=-2; // not read
 
             public int nextInt() {
                 if(last==-2 && !hasNext())
@@ -74,7 +75,7 @@ public class Counter {
         };
 
         return StreamSupport.intStream(
-                Spliterators.spliteratorUnknownSize( it, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL),
+                Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL),
                 false
         );
     }
@@ -90,10 +91,7 @@ public class Counter {
 
         final Map<Character, Long> sourceCounts;
         try(Reader reader = new FileReader("build.gradle")) {
-             sourceCounts = countOf(
-                    steam(reader).mapToObj( x -> (char) x),
-                    ImmutableSet.of('a', 'b', 'c')
-            );
+             sourceCounts = countOf( chars( steam(reader)),  ImmutableSet.of('a', 'b', 'c'));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
