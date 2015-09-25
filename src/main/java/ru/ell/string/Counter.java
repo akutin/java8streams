@@ -1,12 +1,11 @@
 package ru.ell.string;
 
-import com.google.common.collect.ImmutableSet;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.util.*;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -37,7 +36,7 @@ public class Counter {
 
         final Map<Character, Long> counts = s.map( Character::toLowerCase)
                 .filter(x -> caseInsensitive.contains(x))
-                .collect(Collectors.groupingBy(y -> y, Collectors.counting()));
+                .collect(Collectors.groupingBy(UnaryOperator.identity(), Collectors.counting()));
 
         caseInsensitive.stream().forEach( match -> counts.merge( match, 0l, Long::sum));
 
@@ -84,19 +83,29 @@ public class Counter {
         final long countOfA = countOf("Counts occurrences of a set of characters in a string", 'a');
         assert countOfA == 4;
 
-        final Map<Character, Long> counts = countOf("Counts occurrences of a set of characters in a string", ImmutableSet.of('a','b','c'));
+        final Map<Character, Long> counts = countOf("Counts occurrences of a set of characters in a string", new HashSet<>( Arrays.asList( 'a', 'b' , 'c')));
         assert counts.get('a') == 4;
         assert counts.get('b') == 0;
         assert counts.get('c') == 6;
 
         final Map<Character, Long> sourceCounts;
         try(Reader reader = new FileReader("build.gradle")) {
-             sourceCounts = countOf( chars( steam(reader)),  ImmutableSet.of('a', 'b', 'c'));
+             sourceCounts = countOf( chars( steam(reader)),  new HashSet<>( Arrays.asList( 'a', 'b' , 'c')));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        assert sourceCounts.get('a') == 14;
+        assert sourceCounts.get('a') == 10;
         assert sourceCounts.get('b') == 1;
-        assert sourceCounts.get('c') == 8;
+        assert sourceCounts.get('c') == 6;
+
+        try(Reader reader = new FileReader("build.gradle")) {
+            final StringBuilder restore = chars(steam(reader)).reduce(new StringBuilder(), (b, c) -> b.append(c), (b, c) -> b.append(c));
+            restore.toString();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        final String x = null;
+
     }
 }
