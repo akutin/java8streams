@@ -19,7 +19,7 @@ public class Counter {
      * Counts number of character occurrences in a string
      */
     public static long countOf(String s, Character c) {
-        return chars( s.chars()).filter(x -> c.equals(x)).count();
+        return Util.stream(s.chars()).filter(x -> c.equals(x)).count();
     }
 
     /**
@@ -28,7 +28,7 @@ public class Counter {
      * Matches are case-insensitive
      */
     public static Map<Character, Long> countOf(String s, Set<Character> c) {
-        return countOf(chars(s.chars()), c);
+        return countOf(Util.stream(s.chars()), c);
     }
 
     public static Map<Character, Long> countOf(Stream<Character> s, Set<Character> c) {
@@ -41,10 +41,6 @@ public class Counter {
         caseInsensitive.stream().forEach( match -> counts.merge( match, 0l, Long::sum));
 
         return counts;
-    }
-
-    public static Stream<Character> chars(IntStream in) {
-        return in.mapToObj( x -> (char) x);
     }
 
     public static IntStream steam(Reader reader) {
@@ -90,22 +86,20 @@ public class Counter {
 
         final Map<Character, Long> sourceCounts;
         try(Reader reader = new FileReader("build.gradle")) {
-             sourceCounts = countOf( chars( steam(reader)),  new HashSet<>( Arrays.asList( 'a', 'b' , 'c')));
+             sourceCounts = countOf( Util.stream(steam(reader)),  new HashSet<>( Arrays.asList( 'a', 'b' , 'c')));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
         assert sourceCounts.get('a') == 10;
         assert sourceCounts.get('b') == 1;
-        assert sourceCounts.get('c') == 6;
+        assert sourceCounts.get('c') == 7;
 
         try(Reader reader = new FileReader("build.gradle")) {
-            final StringBuilder restore = chars(steam(reader)).reduce(new StringBuilder(), (b, c) -> b.append(c), (b, c) -> b.append(c));
+            final StringBuilder restore = Util.stream(steam(reader)).reduce(new StringBuilder(), (b, c) -> b.append(c), (b, c) -> b.append(c));
             restore.toString();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-
-        final String x = null;
 
     }
 }
