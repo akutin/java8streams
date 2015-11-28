@@ -27,9 +27,10 @@ public class PageVisits {
             Arrays.asList(
                 Arrays.asList("1","2","3","2"),
                 Arrays.asList("0","2","2","4"),
-                Arrays.asList("4","5","5","4")
+                Arrays.asList("6","4","6","6"),
+                Arrays.asList("4","3","2","4")
             ),
-            2
+            3
         );
         assert out.equals( new HashSet<>(Arrays.asList("2","4")));
     }
