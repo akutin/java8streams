@@ -34,15 +34,34 @@ public class ShortestSequenceCollector<T> implements Collector<T, List<Sequence<
     public BiConsumer<List<Sequence<T>>, T> accumulator() {
         return (matches, e) -> {
             LOG.info("Append {} to {} matches", e, matches.size());
-            matches.stream()
+            new ArrayList<>(matches).stream()
                 .filter(s -> !filter.equals(s.getMatch())) // for incomplete sequences
                 .forEach(match -> {
                     LOG.info("Append {} to {}", e, match.getSequence());
-                    if (filter.contains(e)) {
-                        match.getMatch().add(e);
-                    }
                     match.getSequence().add(e);
+                    if (filter.contains(e)) {
+                        if( match.getMatch().add(e) && match.getMatch().equals(filter)) { // new match - drop anything that's longer
+                            boolean obsolete = false;
+                            for( final Iterator<Sequence<T>> i = matches.iterator(); i.hasNext();) {
+                                final Sequence<T> check = i.next();
+                                if( check == match) {
+                                    if( obsolete) {
+                                        LOG.info("Drop newly completed {}", match.getSequence());
+                                        i.remove();
+                                    }
+                                }
+
+                                if( match.getLength() < check.getLength()) {
+                                    LOG.info("Drop obsolete candidate {}", check.getSequence());
+                                    i.remove();
+                                } else if( check.getLength() < match.getLength()) {
+                                    obsolete = true;
+                                }
+                            }
+                        }
+                    }
                 });
+
             if (filter.contains(e)) {
                 matches.add( new Sequence<>(e));
             }
@@ -82,14 +101,14 @@ public class ShortestSequenceCollector<T> implements Collector<T, List<Sequence<
     }
 
     /**
-     * Instance creation
+     * Collector instance
      */
     public static <T> Collector<T, ?, List<T>> shortest(Set<T> filter) {
         return new ShortestSequenceCollector<>(filter);
     }
 
     public static void main(String[] args) {
-        assert Arrays.asList('c', 'd', 'b').equals(stream("abbacdbabc").collect(ShortestSequenceCollector.shortest(asSet('b', 'c', 'd'))));
-        assert Arrays.asList('b', 'c', 'a', 'd').equals(stream("abcbcadbabc").collect(ShortestSequenceCollector.shortest(asSet('b', 'c', 'd'))));
+        assert Arrays.asList('c', 'd', 'b').equals(stream("abbacdbabc").collect(shortest(asSet('b', 'c', 'd'))));
+        assert Arrays.asList('c', 'a', 'd', 'b').equals(stream("abcbcadbabc").collect(shortest(asSet('b', 'c', 'd'))));
     }
 }
